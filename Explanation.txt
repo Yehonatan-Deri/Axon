@@ -1,0 +1,64 @@
+Motion Detection Pipeline — Multiprocessing + OpenCV
+	This project implements a three‑process video pipeline in Python:
+
+	*Streamer — reads frames from a video file and pushes them to a queue.
+	*Detector — performs basic motion detection on incoming frames and forwards the original frame plus detection metadata.
+	*Display — overlays a timestamp (and optional bounding boxes / blur) and displays frames at the source FPS.
+	*All components run in separate processes and communicate via multiprocessing.Queue. Clean shutdown is handled with a sentinel value propagated downstream.
+
+	*main.py # process orchestration (queues + processes)
+	*streamer.py # reads frames, emits CONFIG(FPS), then frames, then SENTINEL
+	*detector.py # motion detection; passes (frame, detections) forward
+	*display.py # timestamp + (optional) boxes/blur + imshow playback
+	*SENTINEL = None (end‑of‑stream marker passed through the pipeline)
+	*MIN_AREA in detector.py (noise filter for small contours; tune to your video)
+
+1) Requirements
+
+	Python 3.10+ (Windows / macOS / Linux)
+	Python packages:
+	opencv-python
+	numpy
+
+2) How to Run
+
+	video_path = "People - 6387.mp4" # change to your file
+	blur_enabled = True/False # for bluring the video on detection areas
+
+4. Why multiprocessing.Queue?
+
+	We transfer large NumPy arrays (frames) and small dicts (metadata).
+	multiprocessing.Queue is ideal because:
+
+	 *FIFO producer/consumer model with back-pressure via maxsize.
+	 *Safe for multiple producers/consumers without extra locking.
+	 *Good performance for frame-sized payloads without writing a custom protocol.
+
+5. How It Works
+	Streamer (streamer.py)
+
+	 *Opens the video with OpenCV.
+	 *Reads FPS and sends a ("CONFIG", {"fps": <value>}) packet.
+	 *Sends each BGR frame to q_frames.
+	 *Pushes SENTINEL at end-of-video.
+
+	Detector (detector.py)
+
+	 *Forwards CONFIG unchanged.
+	 *Converts frames to grayscale; runs absdiff → threshold → dilate → contours.
+	 *Emits (frame, {"motion": bool, "count": int, "boxes": [(x,y,w,h), ...]}).
+	 *Forwards SENTINEL when received.
+
+	Display (display.py)
+
+	 *Reads CONFIG, stores FPS for playback delay.
+	 *Adds timestamp, optionally draws boxes and blurs detected areas.
+	 *Displays frame with cv2.imshow at correct FPS.
+	 *Exits on ESC or SENTINEL.
+
+	Main (main.py)
+
+	 *Creates q_frames and q_results (maxsize=64).
+	 *Spawns Streamer → Detector → Display processes.
+	 *Joins Display, then Detector, then Streamer.
+	 *Terminates any stragglers on exit.
