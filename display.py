@@ -22,11 +22,13 @@ def blur_regions_bgr(frame, boxes: List[Tuple[int,int,int,int]], ksize=(21,21), 
     return frame
 
 def display(in_q: mp.Queue, window_name: str = "Video"):
+    """
+    Reads frames + detection data from the queue and displays them.
+    Shows timestamp, bounding boxes, and motion info.
+    """
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-
-    # >>> NEW: make window full-screen
+    # make window full-screen
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
-    # <<<
 
     try:
         while True:
@@ -34,7 +36,7 @@ def display(in_q: mp.Queue, window_name: str = "Video"):
             if item is SENTINEL:
                 break
 
-            # >>> NEW: handle CONFIG to get FPS
+            # handle CONFIG to get FPS
             if (
                     isinstance(item, tuple)
                     and len(item) == 2
@@ -44,7 +46,6 @@ def display(in_q: mp.Queue, window_name: str = "Video"):
                 fps = float(cfg.get("fps", 30.0)) or 30.0
                 fps = int(fps)
                 continue
-            # <<<
 
             frame, detections = item  # detections dict (motion, count, boxes)
 

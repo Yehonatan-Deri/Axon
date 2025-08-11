@@ -5,12 +5,19 @@ from detector import detector
 from display import display
 
 if __name__ == "__main__":
+    """
+    Main pipeline:
+    1. Streamer: reads video frames
+    2. Detector: detects motion in frames
+    3. Display: shows frames with detection overlay
+    """
     mp.set_start_method("spawn")  # safer cross‑platform
 
     q_frames = mp.Queue(maxsize=64)
     q_results = mp.Queue(maxsize=64)
 
-    video_path = "People - 6387.mp4"
+    video_path = "People - 6387.mp4" # Change to desired video file
+    # video_path = "20250811-1921-16.8336442.mp4"
     # video_path = "Lambs Running.mp4"
 
     p_stream = mp.Process(target=streamer, args=(video_path, q_frames))

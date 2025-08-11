@@ -5,7 +5,7 @@ import multiprocessing as mp
 from typing import Dict, Any, Tuple, List
 
 SENTINEL = None
-MIN_AREA = 500  # ↓ try lowering if you still don't see detections
+MIN_AREA = 400  # lowering if still don't see detections
 
 def _find_contours(bin_img):
     # OpenCV 3 vs 4 compatibility without needing imutils
@@ -39,6 +39,10 @@ def _detect_motion(prev_gray: np.ndarray, gray: np.ndarray) -> Dict[str, Any]:
     }
 
 def detector(in_q: mp.Queue, out_q: mp.Queue):
+    """
+    Receives frames from input queue, detects motion, and sends results downstream.
+    Passes CONFIG messages unchanged.
+    """
     prev_gray = None
 
     try:
@@ -49,13 +53,12 @@ def detector(in_q: mp.Queue, out_q: mp.Queue):
                 out_q.put(SENTINEL)
                 break
 
-            # >>> NEW: pass configuration through unchanged
+            # pass configuration through unchanged
             if isinstance(item, tuple) and len(item) == 2 and item[0] == "CONFIG":
                 out_q.put(item)
                 continue
-            # <<<
 
-            frame = item  # do NOT modify this frame
+            frame = item  # NOT modify this frame
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
             if prev_gray is None:
@@ -74,12 +77,3 @@ def detector(in_q: mp.Queue, out_q: mp.Queue):
     finally:
         # Make sure downstream is released even on error
         out_q.put(SENTINEL)
-
-if __name__ == "__main__":
-    # Minimal local test wiring
-    q_frames = mp.Queue(maxsize=64)
-    q_results = mp.Queue(maxsize=64)
-    p = mp.Process(target=detector, args=(q_frames, q_results), daemon=True)
-    p.start()
-    # Remember to feed q_frames and then send None in a real run.
-    p.join()
