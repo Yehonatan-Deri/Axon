@@ -17,7 +17,11 @@ def _find_contours(bin_img):
     return contours
 
 def _detect_motion(prev_gray: np.ndarray, gray: np.ndarray) -> Dict[str, Any]:
-    # Mirrors basic_vmd.py: absdiff -> threshold -> dilate -> contours
+    """
+    Detect motion between two grayscale frames.
+    Returns motion flag, count of objects, and bounding boxes.
+    Mirrors basic_vmd.py: absdiff -> threshold -> dilate -> contours
+    """
     diff = cv2.absdiff(gray, prev_gray)
     _, thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)
     thresh = cv2.dilate(thresh, None, iterations=2)
