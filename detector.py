@@ -49,6 +49,12 @@ def detector(in_q: mp.Queue, out_q: mp.Queue):
                 out_q.put(SENTINEL)
                 break
 
+            # >>> NEW: pass configuration through unchanged
+            if isinstance(item, tuple) and len(item) == 2 and item[0] == "CONFIG":
+                out_q.put(item)
+                continue
+            # <<<
+
             frame = item  # do NOT modify this frame
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 

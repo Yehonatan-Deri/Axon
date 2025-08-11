@@ -34,6 +34,18 @@ def display(in_q: mp.Queue, window_name: str = "Video"):
             if item is SENTINEL:
                 break
 
+            # >>> NEW: handle CONFIG to get FPS
+            if (
+                    isinstance(item, tuple)
+                    and len(item) == 2
+                    and isinstance(item[0], str)
+                    and item[0] == "CONFIG"):
+                cfg = item[1] or {}
+                fps = float(cfg.get("fps", 30.0)) or 30.0
+                fps = int(fps)
+                continue
+            # <<<
+
             frame, detections = item  # detections dict (motion, count, boxes)
 
             # Timestamp (top-left corner)
@@ -61,12 +73,12 @@ def display(in_q: mp.Queue, window_name: str = "Video"):
                         cv2.LINE_AA)
 
             # NEW: blur only detected regions
-            boxes = detections.get("boxes", [])
-            if boxes:
-                blur_regions_bgr(frame, boxes)
+            # boxes = detections.get("boxes", [])
+            # if boxes:
+            #     blur_regions_bgr(frame, boxes)
 
             cv2.imshow(window_name, frame)
-            key = cv2.waitKey(10) & 0xFF
+            key = cv2.waitKey(fps) & 0xFF
             if key == 27:  # ESC to close early
                 break
 

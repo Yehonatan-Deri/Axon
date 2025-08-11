@@ -12,6 +12,13 @@ def streamer(video_path: str, out_q: mp.Queue):
             out_q.put(SENTINEL)
             return
 
+        # >>> NEW: read FPS and send a config packet downstream
+        fps = cap.get(cv2.CAP_PROP_FPS) or 0.0
+        if fps <= 0:
+            fps = 30.0  # sensible fallback
+        out_q.put(("CONFIG", {"fps": float(fps)}))
+        # <<<
+
         while True:
             ret, frame = cap.read()
             if not ret:
