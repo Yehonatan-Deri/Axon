@@ -21,7 +21,7 @@ def blur_regions_bgr(frame, boxes: List[Tuple[int,int,int,int]], ksize=(21,21), 
             frame[y0:y1, x0:x1] = blurred
     return frame
 
-def display(in_q: mp.Queue, window_name: str = "Video"):
+def display(in_q: mp.Queue, blur_enabled: bool = False, window_name: str = "Video"):
     """
     Reads frames + detection data from the queue and displays them.
     Shows timestamp, bounding boxes, and motion info.
@@ -73,10 +73,11 @@ def display(in_q: mp.Queue, window_name: str = "Video"):
                         2,
                         cv2.LINE_AA)
 
-            # NEW: blur only detected regions
-            # boxes = detections.get("boxes", [])
-            # if boxes:
-            #     blur_regions_bgr(frame, boxes)
+            # blur only detected regions
+            if blur_enabled:
+                boxes = detections.get("boxes", [])
+                if boxes:
+                    blur_regions_bgr(frame, boxes)
 
             cv2.imshow(window_name, frame)
             key = cv2.waitKey(fps) & 0xFF

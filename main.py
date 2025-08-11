@@ -20,9 +20,12 @@ if __name__ == "__main__":
     # video_path = "20250811-1921-16.8336442.mp4"
     # video_path = "Lambs Running.mp4"
 
+    # enable/disable blur flag here
+    blur_enabled = True  # change to False if you don't want blur
+
     p_stream = mp.Process(target=streamer, args=(video_path, q_frames))
     p_detect = mp.Process(target=detector, args=(q_frames, q_results))
-    p_show   = mp.Process(target=display,  args=(q_results,))
+    p_show   = mp.Process(target=display,  args=(q_results,blur_enabled))
 
     try:
         p_stream.start()
