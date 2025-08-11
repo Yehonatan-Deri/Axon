@@ -8,8 +8,9 @@ SENTINEL = None
 def display(in_q: mp.Queue, window_name: str = "Video"):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
-    #
+    # >>> NEW: make window full-screen
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+    # <<<
 
     try:
         while True:
@@ -35,8 +36,13 @@ def display(in_q: mp.Queue, window_name: str = "Video"):
             # (Optional) If you want to visualize metadata, uncomment:
             for (x, y, w, h) in detections.get("boxes", []):
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.putText(frame, f"motion: {detections['motion']} count: {detections['count']}",
-                        (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2, cv2.LINE_AA)
+            cv2.putText(frame,
+                        f"motion: {detections['motion']} count: {detections['count']}",
+                        (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        (0,255,0),
+                        2,
+                        cv2.LINE_AA)
 
             cv2.imshow(window_name, frame)
             key = cv2.waitKey(30) & 0xFF

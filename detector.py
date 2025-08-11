@@ -5,6 +5,7 @@ import multiprocessing as mp
 from typing import Dict, Any, Tuple, List
 
 SENTINEL = None
+MIN_AREA = 500  # ↓ try lowering if you still don't see detections
 
 def _find_contours(bin_img):
     # OpenCV 3 vs 4 compatibility without needing imutils
@@ -24,7 +25,7 @@ def _detect_motion(prev_gray: np.ndarray, gray: np.ndarray) -> Dict[str, Any]:
 
     boxes: List[Tuple[int, int, int, int]] = []
     for c in cnts:
-        if cv2.contourArea(c) < 500:  # small noise filter; tune as needed
+        if cv2.contourArea(c) < MIN_AREA:  # small noise filter; tune as needed
             continue
         x, y, w, h = cv2.boundingRect(c)
         boxes.append((x, y, w, h))
