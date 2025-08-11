@@ -1,4 +1,6 @@
 # display.py
+import queue
+
 import cv2
 import multiprocessing as mp
 from datetime import datetime
@@ -32,7 +34,19 @@ def display(in_q: mp.Queue, blur_enabled: bool = False, window_name: str = "Vide
 
     try:
         while True:
-            item = in_q.get()
+            # 1) If user clicked the X, exit immediately
+            if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
+                break
+
+            # 2) Poll the queue with a short timeout so UI stays responsive
+            try:
+                item = in_q.get()
+            except queue.Empty:
+                # Let OpenCV process UI events
+                if cv2.waitKey(1) & 0xFF == 27:  # ESC
+                    break
+                continue
+
             if item is SENTINEL:
                 break
 
