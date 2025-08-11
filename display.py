@@ -2,8 +2,24 @@
 import cv2
 import multiprocessing as mp
 from datetime import datetime
+from typing import Dict, Any, List, Tuple
 
 SENTINEL = None
+
+def blur_regions_bgr(frame, boxes: List[Tuple[int,int,int,int]], ksize=(21,21), sigmaX=0):
+    """
+    Apply Gaussian blur only to rectangular regions given by boxes (x,y,w,h).
+    Operates in-place on 'frame' and returns it.
+    """
+    h, w = frame.shape[:2]
+    for (x, y, bw, bh) in boxes:
+        x0 = max(0, x); y0 = max(0, y)
+        x1 = min(w, x + bw); y1 = min(h, y + bh)
+        if x1 > x0 and y1 > y0:
+            roi = frame[y0:y1, x0:x1]
+            blurred = cv2.GaussianBlur(roi, ksize, sigmaX)
+            frame[y0:y1, x0:x1] = blurred
+    return frame
 
 def display(in_q: mp.Queue, window_name: str = "Video"):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -44,8 +60,13 @@ def display(in_q: mp.Queue, window_name: str = "Video"):
                         2,
                         cv2.LINE_AA)
 
+            # NEW: blur only detected regions
+            boxes = detections.get("boxes", [])
+            if boxes:
+                blur_regions_bgr(frame, boxes)
+
             cv2.imshow(window_name, frame)
-            key = cv2.waitKey(30) & 0xFF
+            key = cv2.waitKey(10) & 0xFF
             if key == 27:  # ESC to close early
                 break
 
